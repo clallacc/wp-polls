@@ -152,7 +152,10 @@ function check_totalvotes() {
 // Add Poll's Answer In Add Poll Page
 function add_poll_answer_add() {
 	jQuery(document).ready(function($) {
-		$('#poll_answers').append('<tr id="poll-answer-' + count_poll_answer + '"><th width="20%" scope="row" valign="top"></th><td width="80%"><input type="text" size="50" maxlength="200" name="polla_answers[]" />&nbsp;&nbsp;&nbsp;<input type=\"text\" size=\"50\" maxlength=\"200\" placeholder=\"Question Image\" name=\"polla_image[]\" />&nbsp;&nbsp;&nbsp;<input type="button" value="' + pollsAdminL10n.text_remove_poll_answer + '" onclick="remove_poll_answer_add(' + count_poll_answer + ');" class="button" /></td></tr>');
+		let image_input = `<img alt="image preview" id="image_preview_${count_poll_answer}" src="https://cdn-icons-png.flaticon.com/512/739/739249.png" width="10%%" height="10%%" style="padding: 0 10px;">`;
+		image_input +=`<input id="answer_image_${count_poll_answer}" type="text" value="" name="polla_images[]" hidden/>`;
+		image_input += `<input id="upload_image_button_${count_poll_answer}" type="button" class="button upload_image_button" value="Upload Image" data-id="${count_poll_answer}" />`;
+		$('#poll_answers').append('<tr id="poll-answer-' + count_poll_answer + '"><th width="20%" scope="row" valign="top"></th><td width="80%" class="td-poll-answer"><input type="text" size="50" maxlength="200" name="polla_answers[]" />&nbsp;&nbsp;&nbsp;'+image_input+'&nbsp;&nbsp;&nbsp;<input type="button" value="' + pollsAdminL10n.text_remove_poll_answer + '" onclick="remove_poll_answer_add(' + count_poll_answer + ');" class="button" /></td></tr>');
 		count_poll_answer++;
 		reorder_answer_num();
 	});
@@ -169,7 +172,10 @@ function remove_poll_answer_add(poll_answer_id) {
 // Add Poll's Answer In Edit Poll Page
 function add_poll_answer_edit() {
 	jQuery(document).ready(function($) {
-		$('#poll_answers').append('<tr id="poll-answer-new-' + count_poll_answer_new + '"><th width="20%" scope="row" valign="top"></th><td width="60%"><input type="text" size="50" maxlength="200" name="polla_answers_new[]" />&nbsp;&nbsp;&nbsp;<input type=\"text\" size=\"50\" maxlength=\"200\" placeholder=\"Question Image\" name=\"polla_image[]\" />&nbsp;&nbsp;&nbsp;<input type="button" value="' + pollsAdminL10n.text_remove_poll_answer + '" onclick="remove_poll_answer_edit(' + count_poll_answer_new + ');" class="button" /></td><td width="20%" align="' + pollsAdminL10n.text_direction + '">0 <input type="text" size="4" name="polla_answers_new_votes[]" value="0" onblur="check_totalvotes();" /></td></tr>');
+		let image_input = `<img alt="image preview" id="image_preview_${count_poll_answer_new}" src="https://cdn-icons-png.flaticon.com/512/739/739249.png" width="10%%" height="10%%" style="padding: 0 10px;">`;
+		image_input +=`<input id="answer_image_${count_poll_answer_new}" type="text" value="" name="polla_images_${count_poll_answer_new}" hidden/>`;
+		image_input += `<input id="upload_image_button_${count_poll_answer_new}" type="button" class="button upload_image_button" value="Upload Image" data-id="${count_poll_answer_new}" />`;
+		$('#poll_answers').append('<tr id="poll-answer-new-' + count_poll_answer_new + '"><th width="20%" scope="row" valign="top"></th><td width="60%" class="td-poll-answer"><input type="text" size="50" maxlength="200" name="polla_answers_new[]" />&nbsp;&nbsp;&nbsp;'+image_input+'&nbsp;&nbsp;&nbsp;<input type="button" value="' + pollsAdminL10n.text_remove_poll_answer + '" onclick="remove_poll_answer_edit(' + count_poll_answer_new + ');" class="button" /></td><td width="20%" align="' + pollsAdminL10n.text_direction + '">0 <input type="text" size="4" name="polla_answers_new_votes[]" value="0" onblur="check_totalvotes();" /></td></tr>');
 		count_poll_answer_new++;
 		reorder_answer_num();
 	});

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__.'/poll-media.php';
+
 ### Check Whether User Can Manage Polls
 if(!current_user_can('manage_polls')) {
 	die('Access Denied');
@@ -85,6 +87,8 @@ if ( ! empty($_POST['do'] ) ) {
 				// Add Poll Answers
 				$polla_answers = isset( $_POST['polla_answers'] ) ? $_POST['polla_answers'] : array();
 				$polla_qid = (int) $wpdb->insert_id;
+				$polla_images = isset( $_POST['polla_images'] ) ? $_POST['polla_images'] : array();
+				$image_count = 0;
 				foreach ( $polla_answers as $polla_answer ) {
 					$polla_answer = wp_kses_post( trim( $polla_answer ) );
 					if ( ! empty( $polla_answer ) ) {
@@ -93,10 +97,12 @@ if ( ! empty($_POST['do'] ) ) {
 							array(
 								'polla_qid'	  => $polla_qid,
 								'polla_answers'  => $polla_answer,
+								'polla_images'  => array_key_exists($image_count, $polla_images) ?  $polla_images[$image_count] : NULL,
 								'polla_votes'	=> 0
 							),
 							array(
 								'%d',
+								'%s',
 								'%s',
 								'%d'
 							)
@@ -104,6 +110,7 @@ if ( ! empty($_POST['do'] ) ) {
 						if ( ! $add_poll_answers ) {
 							$text .= '<p style="color: red;">' . sprintf(__('Error In Adding Poll\'s Answer \'%s\'.', 'wp-polls'), $polla_answer) . '</p>';
 						}
+						$image_count++;
 					} else {
 						$text .= '<p style="color: red;">' . __( 'Poll\'s Answer is empty.', 'wp-polls' ) . '</p>';
 					}
@@ -132,6 +139,7 @@ if ( ! empty($_POST['do'] ) ) {
 ### Add Poll Form
 $poll_noquestion = 2;
 $count = 0;
+wp_enqueue_media();
 ?>
 <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade">'.removeslashes($text).'</div>'; } ?>
 <form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
@@ -160,7 +168,7 @@ $count = 0;
 			for($i = 1; $i <= $poll_noquestion; $i++) {
 				echo "<tr id=\"poll-answer-$i\">\n";
 				echo "<th width=\"20%\" scope=\"row\" valign=\"top\">".sprintf(__('Answer %s', 'wp-polls'), number_format_i18n($i))."</th>\n";
-				echo "<td width=\"80%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_answers[]\" />&nbsp;&nbsp;&nbsp;<input type=\"text\" size=\"50\" maxlength=\"200\" placeholder=\"Question Image\" name=\"polla_image[]\" />&nbsp;&nbsp;&nbsp;<input type=\"button\" value=\"".__('Remove', 'wp-polls')."\" onclick=\"remove_poll_answer_add(".$i.");\" class=\"button\" /></td>\n";
+				echo "<td width=\"80%\" class=\"td-poll-answer\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_answers[]\" />&nbsp;&nbsp;&nbsp;".image_button($i)."&nbsp;&nbsp;&nbsp;<input type=\"button\" value=\"".__('Remove', 'wp-polls')."\" onclick=\"remove_poll_answer_add(".$i.");\" class=\"button\" /></td>\n";
 				echo "</tr>\n";
 				$count++;
 			}
@@ -207,3 +215,5 @@ $count = 0;
 	<p style="text-align: center;"><input type="submit" name="do" value="<?php _e('Add Poll', 'wp-polls'); ?>"  class="button-primary" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wp-polls'); ?>" class="button" onclick="javascript:history.go(-1)" /></p>
 </div>
 </form>
+
+<?php echo media_js(); ?>
