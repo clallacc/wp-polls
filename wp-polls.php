@@ -2032,5 +2032,11 @@ function polls_activate() {
 	if( ! $role->has_cap( 'manage_polls' ) ) {
 		$role->add_cap( 'manage_polls' );
 	}
+
+	$row = $wpdb->get_results(  "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = $wpdb->pollsa AND column_name = 'polla_images'"  );
+	if(empty($row)){
+		$wpdb->query("ALTER TABLE $wpdb->pollsa ADD polla_images VARCHAR(255) DEFAULT NULL AFTER `polla_answers`");
+	}
+
 	cron_polls_place();
 }
