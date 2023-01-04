@@ -117,3 +117,11 @@
 	color: #000000;
 	background-color: #FFFFFF;
 }
+.li-answer{
+	display: flex !important;
+    align-items: center;
+}
+
+li.li-answer * {
+	margin: 10px 10px;
+}

@@ -4,6 +4,8 @@ if(!current_user_can('manage_polls')) {
     die('Access Denied');
 }
 
+require_once __DIR__.'/poll-media.php';
+
 ### Variables Variables Variables
 $base_name = plugin_basename('wp-polls/polls-manager.php');
 $base_page = 'admin.php?page='.$base_name;
@@ -114,10 +116,12 @@ if(!empty($_POST['do'])) {
                 foreach($polla_aids as $polla_aid) {
                     $polla_answers = wp_kses_post( trim( $_POST['polla_aid-'.$polla_aid] ) );
                     $polla_votes = (int) sanitize_key($_POST['polla_votes-'.$polla_aid]);
+                    $polla_images = $_POST['polla_images_'.$polla_aid];
                     $edit_poll_answer = $wpdb->update(
                         $wpdb->pollsa,
                         array(
                             'polla_answers' => $polla_answers,
+                            'polla_images' => $polla_images,
                             'polla_votes'   => $polla_votes
                         ),
                         array(
@@ -125,6 +129,7 @@ if(!empty($_POST['do'])) {
                             'polla_aid' => $polla_aid
                         ),
                         array(
+                            '%s',
                             '%s',
                             '%d'
                         ),
@@ -147,6 +152,7 @@ if(!empty($_POST['do'])) {
             if(!empty($polla_answers_new)) {
                 $i = 0;
                 $polla_answers_new_votes = $_POST['polla_answers_new_votes'];
+                $polla_image = $_POST['polla_images_'.$i];
                 foreach($polla_answers_new as $polla_answer_new) {
                     $polla_answer_new = wp_kses_post( trim( $polla_answer_new ) );
                     if(!empty($polla_answer_new)) {
@@ -156,10 +162,12 @@ if(!empty($_POST['do'])) {
                             array(
                                 'polla_qid'      => $pollq_id,
                                 'polla_answers'  => $polla_answer_new,
+                                'polla_images'  => $polla_image,
                                 'polla_votes'    => $polla_answer_new_vote
                             ),
                             array(
                                 '%d',
+                                '%s',
                                 '%s',
                                 '%d'
                             )
@@ -195,7 +203,7 @@ switch($mode) {
     case 'edit':
         $last_col_align = is_rtl() ? 'right' : 'left';
         $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
-        $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
+        $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_images, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
         $poll_noquestion = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(polla_aid) FROM $wpdb->pollsa WHERE polla_qid = %d", $poll_id ) );
         $poll_question_text = removeslashes($poll_question->pollq_question);
         $poll_totalvotes = (int) $poll_question->pollq_totalvotes;
@@ -243,11 +251,13 @@ switch($mode) {
                             foreach($poll_answers as $poll_answer) {
                                 $polla_aid = (int) $poll_answer->polla_aid;
                                 $polla_answers = removeslashes($poll_answer->polla_answers);
+                                $polla_image = $poll_answer->polla_images;
                                 $polla_votes = (int) $poll_answer->polla_votes;
                                 $pollip_answers[$polla_aid] = $polla_answers;
                                 echo "<tr id=\"poll-answer-$polla_aid\">\n";
                                 echo '<th width="20%" scope="row" valign="top">'.sprintf(__('Answer %s', 'wp-polls'), number_format_i18n($i)).'</th>'."\n";
-                                echo "<td width=\"60%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_aid-$polla_aid\" value=\"". esc_attr( $polla_answers ) . "\" />&nbsp;&nbsp;&nbsp;";
+                                echo "<td class=\"td-poll-answer\" width=\"60%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_aid-$polla_aid\" value=\"". esc_attr( $polla_answers ) . "\" />&nbsp;&nbsp;&nbsp;";
+                                echo image_button($polla_aid, $polla_image);
                                 echo "<input type=\"button\" value=\"".__('Delete', 'wp-polls')."\" onclick=\"delete_poll_ans($poll_id, $polla_aid, $polla_votes, '".sprintf(esc_js(__('You are about to delete this poll\'s answer \'%s\'.', 'wp-polls')), esc_js( esc_attr( $polla_answers ) ) ) . "', '".wp_create_nonce('wp-polls_delete-poll-answer')."');\" class=\"button\" /></td>\n";
                                 echo '<td width="20%" align="'.$last_col_align.'">'.number_format_i18n($polla_votes)." <input type=\"text\" size=\"4\" id=\"polla_votes-$polla_aid\" name=\"polla_votes-$polla_aid\" value=\"$polla_votes\" onblur=\"check_totalvotes();\" /></td>\n</tr>\n";
                                 $poll_actual_totalvotes += $polla_votes;
@@ -501,3 +511,6 @@ switch($mode) {
         </div>
 <?php
 } // End switch($mode)
+wp_enqueue_media();
+echo media_js();
+?>

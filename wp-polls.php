@@ -460,7 +460,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 
 	// Get Poll Answers Data
 	list($order_by, $sort_order) = _polls_get_ans_sort();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY $order_by $sort_order", $poll_question_id ) );
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_images, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY $order_by $sort_order", $poll_question_id ) );
 	// If There Is Poll Question With Answers
 	if($poll_question && $poll_answers) {
 		// Display Poll Voting Form
@@ -477,6 +477,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 			// Poll Answer Variables
 			$poll_answer_id = (int) $poll_answer->polla_aid;
 			$poll_answer_text = wp_kses_post( removeslashes( $poll_answer->polla_answers ) );
+			$poll_answer_image = $poll_answer->polla_images;
 			$poll_answer_votes = (int) $poll_answer->polla_votes;
 			$poll_answer_percentage = $poll_question_totalvotes > 0 ? round( ( $poll_answer_votes / $poll_question_totalvotes ) * 100 ) : 0;
 			$poll_multiple_answer_percentage = $poll_question_totalvoters > 0 ? round( ( $poll_answer_votes / $poll_question_totalvoters ) * 100 ) : 0;
@@ -486,6 +487,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 				'%POLL_ID%'                         => $poll_question_id,
 				'%POLL_ANSWER_ID%'                  => $poll_answer_id,
 				'%POLL_ANSWER%'                     => $poll_answer_text,
+				'%POLL_ANSWER_IMAGE%'				=> $poll_answer_image,
 				'%POLL_ANSWER_VOTES%'               => number_format_i18n( $poll_answer_votes ),
 				'%POLL_ANSWER_PERCENTAGE%'          => $poll_answer_percentage,
 				'%POLL_MULTIPLE_ANSWER_PERCENTAGE%' => $poll_multiple_answer_percentage,
@@ -604,7 +606,7 @@ function display_pollresult( $poll_id, $user_voted = array(), $display_loading =
 
 	// Get Poll Answers Data
 	list( $order_by, $sort_order ) = _polls_get_ans_result_sort();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY $order_by $sort_order", $poll_question_id ) );
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_images, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY $order_by $sort_order", $poll_question_id ) );
 	// If There Is Poll Question With Answers
 	if ( $poll_question && $poll_answers ) {
 		// Store The Percentage Of The Poll
@@ -619,6 +621,7 @@ function display_pollresult( $poll_id, $user_voted = array(), $display_loading =
 			// Poll Answer Variables
 			$poll_answer_id = (int) $poll_answer->polla_aid;
 			$poll_answer_text = wp_kses_post( removeslashes( $poll_answer->polla_answers ) );
+			$poll_answer_image = $poll_answer->polla_images;
 			$poll_answer_votes = (int) $poll_answer->polla_votes;
 			// Calculate Percentage And Image Bar Width
 			$poll_answer_percentage = 0;
@@ -650,6 +653,7 @@ function display_pollresult( $poll_id, $user_voted = array(), $display_loading =
 				'%POLL_ANSWER_ID%' => $poll_answer_id,
 				'%POLL_ANSWER%' => $poll_answer_text,
 				'%POLL_ANSWER_TEXT%' => htmlspecialchars( wp_strip_all_tags( $poll_answer_text ) ),
+				'%POLL_ANSWER_IMAGE%' => $poll_answer_image,
 				'%POLL_ANSWER_VOTES%' => number_format_i18n( $poll_answer_votes ),
 				'%POLL_ANSWER_PERCENTAGE%' => $poll_answer_percentage,
 				'%POLL_MULTIPLE_ANSWER_PERCENTAGE%' => $poll_multiple_answer_percentage,
@@ -1107,6 +1111,7 @@ function polls_archive() {
 				'%POLL_ANSWER_ID%',
 				'%POLL_ANSWER%',
 				'%POLL_ANSWER_TEXT%',
+				'%POLL_ANSWER_IMAGE%',
 				'%POLL_ANSWER_VOTES%',
 				'%POLL_ANSWER_PERCENTAGE%',
 				'%POLL_MULTIPLE_ANSWER_PERCENTAGE%',
@@ -1891,6 +1896,7 @@ function polls_activate() {
 							  "polla_aid int(10) NOT NULL auto_increment," .
 							  "polla_qid int(10) NOT NULL default '0'," .
 							  "polla_answers varchar(200) character set utf8 NOT NULL default ''," .
+							  "polla_images varchar(256) character set utf8 DEFAULT NULL," .
 							  "polla_votes int(10) NOT NULL default '0'," .
 							  "PRIMARY KEY  (polla_aid)" .
 							  ") $charset_collate;";
@@ -1930,7 +1936,7 @@ function polls_activate() {
 	add_option('poll_template_voteheader', '<p style="text-align: center;"><strong>%POLL_QUESTION%</strong></p>'.
 	'<div id="polls-%POLL_ID%-ans" class="wp-polls-ans">'.
 	'<ul class="wp-polls-ul">');
-	add_option('poll_template_votebody', '<li><input type="%POLL_CHECKBOX_RADIO%" id="poll-answer-%POLL_ANSWER_ID%" name="poll_%POLL_ID%" value="%POLL_ANSWER_ID%" /> <label for="poll-answer-%POLL_ANSWER_ID%">%POLL_ANSWER%</label></li>');
+	add_option('poll_template_votebody', '<li class="li-answer"><input type="%POLL_CHECKBOX_RADIO%" id="poll-answer-%POLL_ANSWER_ID%" name="poll_%POLL_ID%" value="%POLL_ANSWER_ID%" /> <label for="poll-answer-%POLL_ANSWER_ID%">%POLL_ANSWER%</label> <img src="%POLL_ANSWER_IMAGE%" width="10%" height="10%"></li>');
 	add_option('poll_template_votefooter', '</ul>'.
 	'<p style="text-align: center;"><input type="button" name="vote" value="   '.__('Vote', 'wp-polls').'   " class="Buttons" onclick="poll_vote(%POLL_ID%);" /></p>'.
 	'<p style="text-align: center;"><a href="#ViewPollResults" onclick="poll_result(%POLL_ID%); return false;" title="'.__('View Results Of This Poll', 'wp-polls').'">'.__('View Results', 'wp-polls').'</a></p>'.

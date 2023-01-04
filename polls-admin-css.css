@@ -8,3 +8,7 @@
 	height: 25px;
 	border: 1px solid #000000;
 }
+.td-poll-answer{
+	display: flex;
+	align-items: center;
+}
